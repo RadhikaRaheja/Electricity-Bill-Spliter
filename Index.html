@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Bill Splitter</title>
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-hover: #115e59;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 480px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 12px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 0.75rem 0.75rem 35px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input.no-prefix {
+            padding-left: 12px;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .results {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed var(--border);
+        }
+
+        .rate-badge {
+            background: #f0fdf4;
+            color: #166534;
+            padding: 0.5rem;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .share-card {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .share-card.highlight {
+            background: #f0fdfa;
+            border-left: 4px solid var(--primary);
+        }
+
+        .share-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .share-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .share-units {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: block;
+            text-align: right;
+        }
+
+        .error {
+            color: #b91c1c;
+            background: #fef2f2;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Electricity Bill Splitter</h1>
+    <p class="subtitle">Enter readings to calculate individual shares in ₹</p>
+
+    <div id="errorBox" class="error"></div>
+
+    <div class="form-group">
+        <label for="totalBill">Total Bill Amount</label>
+        <div class="input-wrapper">
+            <span class="input-prefix">₹</span>
+            <input type="number" id="totalBill" placeholder="0.00" min="0" step="any">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="totalUnits">Total Units Consumed (Main Meter)</label>
+        <div class="input-wrapper">
+            <input type="number" id="totalUnits" class="no-prefix" placeholder="0" min="0">
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="form-group">
+            <label for="openReading">Sub-meter Opening</label>
+            <div class="input-wrapper">
+                <input type="number" id="openReading" class="no-prefix" placeholder="0" min="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="closeReading">Sub-meter Closing</label>
+            <div class="input-wrapper">
+                <input type="number" id="closeReading" class="no-prefix" placeholder="0" min="0">
+            </div>
+        </div>
+    </div>
+
+    <div class="results">
+        <div id="rateBadge" class="rate-badge" style="display: none;">
+            Calculated Rate: ₹0.00 / unit
+        </div>
+
+        <div class="share-card highlight">
+            <div>
+                <div class="share-label">Sub-meter Share</div>
+                <div id="subUnitsLabel" class="share-units">0 units</div>
+            </div>
+            <div class="share-value" id="subShare">₹0.00</div>
+        </div>
+
+        <div class="share-card">
+            <div>
+                <div class="share-label">Your Share (Remainder)</div>
+                <div id="yourUnitsLabel" class="share-units">0 units</div>
+            </div>
+            <div class="share-value" id="yourShare">₹0.00</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inputs = ['totalBill', 'totalUnits', 'openReading', 'closeReading'];
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', calculateBill);
+    });
+
+    function calculateBill() {
+        const totalBill = parseFloat(document.getElementById('totalBill').value) || 0;
+        const totalUnits = parseFloat(document.getElementById('totalUnits').value) || 0;
+        const openReading = parseFloat(document.getElementById('openReading').value) || 0;
+        const closeReading = parseFloat(document.getElementById('closeReading').value) || 0;
+
+        const errorBox = document.getElementById('errorBox');
+        const rateBadge = document.getElementById('rateBadge');
+        
+        errorBox.style.display = 'none';
+        errorBox.innerText = '';
+
+        // Initial Reset
+        document.getElementById('subShare').innerText = '₹0.00';
+        document.getElementById('yourShare').innerText = '₹0.00';
+        document.getElementById('subUnitsLabel').innerText = '0 units';
+        document.getElementById('yourUnitsLabel').innerText = '0 units';
+        rateBadge.style.display = 'none';
+
+        if (totalBill <= 0 || totalUnits <= 0) return;
+
+        if (closeReading < openReading) {
+            errorBox.style.display = 'block';
+            errorBox.innerText = 'Closing reading cannot be less than opening reading.';
+            return;
+        }
+
+        const ratePerUnit = totalBill / totalUnits;
+        const subUnits = closeReading - openReading;
+
+        if (subUnits > totalUnits) {
+            errorBox.style.display = 'block';
+            errorBox.innerText = 'Sub-meter units cannot exceed total main meter units.';
+            return;
+        }
+
+        const subShare = subUnits * ratePerUnit;
+        const yourShare = totalBill - subShare;
+        const yourUnits = totalUnits - subUnits;
+
+        // Display Rate
+        rateBadge.style.display = 'block';
+        rateBadge.innerText = `Calculated Rate: ₹${ratePerUnit.toFixed(2)} / unit`;
+
+        // Display Shares
+        document.getElementById('subShare').innerText = `₹${subShare.toFixed(2)}`;
+        document.getElementById('yourShare').innerText = `₹${yourShare.toFixed(2)}`;
+        
+        document.getElementById('subUnitsLabel').innerText = `${subUnits.toFixed(1)} units`;
+        document.getElementById('yourUnitsLabel').innerText = `${yourUnits.toFixed(1)} units`;
+    }
+</script>
+
+</body>
+</html>
